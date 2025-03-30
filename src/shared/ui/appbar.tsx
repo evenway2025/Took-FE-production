@@ -4,9 +4,6 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import Image from 'next/image';
 import React from 'react';
 
-import { cn } from '../lib/utils';
-import { spacingStyles } from '../spacing';
-
 const appbarVariants = cva(
   'z-100 sticky top-0 flex h-16 min-h-16 w-full max-w-[600px] items-center justify-between px-4',
   {
@@ -43,14 +40,9 @@ type AppbarProps = AppbarVariantProps & {
   onRightClick?: () => void;
   onRightClickSecond?: () => void;
   title?: string;
-  isBlurred?: boolean;
 };
 
-function renderLeftIcon({
-  page,
-  isBlurred = false,
-  onLeftClick,
-}: Pick<AppbarProps, 'page' | 'onLeftClick' | 'isBlurred'>) {
+function renderLeftIcon({ page, onLeftClick }: Pick<AppbarProps, 'page' | 'onLeftClick'>) {
   switch (page) {
     case 'main':
       return (
@@ -59,18 +51,6 @@ function renderLeftIcon({
         </button>
       );
     case 'detail':
-      return (
-        <button
-          onClick={onLeftClick}
-          className={cn(
-            'rounded-full transition-colors duration-200',
-            isBlurred && 'bg-[rgba(255,255,255,0.10)]',
-            spacingStyles({ padding: 'sm' }),
-          )}
-        >
-          <Image src="/icons/leftArrow-white.svg" alt="이전 아이콘" width={24} height={24} />
-        </button>
-      );
     case 'create':
     case 'mypage':
       return (
@@ -93,8 +73,7 @@ function renderRightIcon({
   page,
   onRightClick,
   onRightClickSecond,
-  isBlurred,
-}: Pick<AppbarProps, 'page' | 'onRightClick' | 'onRightClickSecond' | 'isBlurred'>) {
+}: Pick<AppbarProps, 'page' | 'onRightClick' | 'onRightClickSecond'>) {
   switch (page) {
     case 'main':
       return (
@@ -104,14 +83,7 @@ function renderRightIcon({
       );
     case 'detail':
       return (
-        <button
-          onClick={onRightClick}
-          className={cn(
-            'rounded-full transition-colors duration-200',
-            isBlurred && 'bg-[rgba(255,255,255,0.10)]',
-            spacingStyles({ padding: 'sm' }),
-          )}
-        >
+        <button onClick={onRightClick}>
           <Image src="/icons/menuIcon-white.svg" alt="메뉴 아이콘" width={24} height={24} />
         </button>
       );
@@ -155,16 +127,14 @@ function renderRightIcon({
  * @returns {JSX.Element} - appbar 컴포넌트
  */
 
-function Appbar({ page, hasBackground, title, onLeftClick, onRightClick, onRightClickSecond, isBlurred }: AppbarProps) {
+function Appbar({ page, hasBackground, title, onLeftClick, onRightClick, onRightClickSecond }: AppbarProps) {
   return (
-    <header className={cn(appbarVariants({ page, hasBackground }))}>
-      <div className="flex flex-1">{renderLeftIcon({ page, onLeftClick, isBlurred })}</div>
+    <header className={appbarVariants({ page, hasBackground })}>
+      <div className="flex flex-1">{renderLeftIcon({ page, onLeftClick })}</div>
 
       {title && <h1 className="flex-1 text-center text-body-3 text-white">{title}</h1>}
 
-      <div className="flex flex-1 justify-end">
-        {renderRightIcon({ page, onRightClick, onRightClickSecond, isBlurred })}
-      </div>
+      <div className="flex flex-1 justify-end">{renderRightIcon({ page, onRightClick, onRightClickSecond })}</div>
     </header>
   );
 }

@@ -1,31 +1,29 @@
 'use client';
 
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
 import { useState } from 'react';
+import { Toaster } from 'sonner';
 
 import useHistoryBack from '@/shared/hooks/useHistoryBack';
 import { spacingStyles } from '@/shared/spacing/spacing';
 import Appbar from '@/shared/ui/appbar';
+import { BottomModal } from '@/shared/ui/bottomModal/bottomModal';
+import { BottomMenuItem } from '@/shared/ui/bottomModal/bottomModalItem';
+import BottomModalTitle from '@/shared/ui/bottomModal/bottomModalTitle';
+import { MemoInput } from '@/shared/ui/bottomModal/memoInput';
 import Tag from '@/shared/ui/tag/tag';
-import Toast from '@/shared/ui/Toast';
 
 import JOB_CONFIG, { JobType } from '../config/jobs-config';
+import { useCardDetailQuery } from '../hooks/query/useCardDetailQuery';
 import { useBottomModal } from '../hooks/useBottomModal';
-import { useScroll } from '../hooks/useScroll';
-import { CardDetailDto } from '../types/cardDetail';
 
-import BottomSheet from './bottomSheet';
-
-interface CardDetailHeaderProps {
-  data: CardDetailDto;
-  type: string;
-}
-
-const CardDetailHeader = ({ data, type }: CardDetailHeaderProps) => {
+const CardDetailHeader = () => {
+  const { cardId } = useParams();
+  const { data } = useCardDetailQuery(Number(cardId));
   const { isModalOpen, headerRightHandler, closeModal } = useBottomModal();
   const [mode, setMode] = useState(false);
   const handleBack = useHistoryBack();
-  const isScroll = useScroll();
 
   const handleMode = () => {
     setMode(true);
@@ -35,8 +33,8 @@ const CardDetailHeader = ({ data, type }: CardDetailHeaderProps) => {
     setMode(false);
   };
 
-  // isMyCard : 명함 타입 명시 (내 명함 , 받은 명함)
-  const isMyCard = type === 'mycard' ? true : false;
+  // isMyCard : 받은 명함 임시적으로 명시
+  const isMyCard = false;
 
   const userJob = (data?.data?.job as JobType) || 'DEVELOPER';
 
@@ -46,13 +44,13 @@ const CardDetailHeader = ({ data, type }: CardDetailHeaderProps) => {
   return (
     <>
       <div
-        className="w-full bg-cover bg-center pb-[40px]"
+        className="card-detail-header w-full bg-cover bg-center pb-[40px]"
         style={{
           backgroundImage: `url('${currentJob.backgroundImage}')`,
         }}
       >
         {/* 카드 상세 헤더 */}
-        <Appbar page="detail" onRightClick={headerRightHandler} onLeftClick={handleBack} isBlurred={isScroll} />
+        <Appbar page="detail" onRightClick={headerRightHandler} onLeftClick={handleBack} />
         {/* 카드 상세 userData */}
         <div className={`flex w-full items-start ${spacingStyles({ marginTop: 'ms' })}`}>
           <div
@@ -60,16 +58,13 @@ const CardDetailHeader = ({ data, type }: CardDetailHeaderProps) => {
           >
             <div className="flex w-full items-center justify-between">
               {/* 프로필 이미지 */}
-              {data?.data?.nickname && (
-                <div
-                  className={`flex h-[56px] w-[56px] items-center justify-center rounded-full bg-gray-100 ${spacingStyles({ marginBottom: 'ms' })}`}
-                >
-                  <Image src="/icons/avatarIcon.svg" alt="Settings" width="28" height="28" className="rounded-full" />
-                </div>
-              )}
-
+              <div
+                className={`flex h-[56px] w-[56px] items-center justify-center rounded-full bg-gray-100 ${spacingStyles({ marginBottom: 'ms' })}`}
+              >
+                <Image src="/icons/avatarIcon.svg" alt="Settings" width="28" height="28" className="rounded-full" />
+              </div>
               {/* 개발자 , 디자이너 아이콘 */}
-              {data?.data?.job && <Image src={currentJob.iconPath} alt={currentJob.iconAlt} width="30" height="30" />}
+              <Image src={currentJob.iconPath} alt={currentJob.iconAlt} width="30" height="30" />
             </div>
             <p className="title-1 line-clamp-1">{data?.data.nickname}</p>
             <div
@@ -100,39 +95,45 @@ const CardDetailHeader = ({ data, type }: CardDetailHeaderProps) => {
                 <p className="line-clamp-1 text-body-5">{data?.data.region}</p>
               </div>
             )}
+
             {/* 이후 폴더를 map으로 수정 예정 */}
-            {!isMyCard && data?.data.folders && (
+            {!isMyCard && data?.data.group && (
               <div className={`${spacingStyles({ marginTop: 'lg' })} flex items-center`}>
-                {data?.data.folders.map((e, i) => {
+                {data?.data.group.map((e, i) => {
                   return (
                     <Tag
                       key={i}
-                      message={e.name}
+                      message={e}
                       className={`${spacingStyles({ marginRight: 'sm' })} bg-opacity-white-20`}
                     />
                   );
                 })}
               </div>
             )}
+
             {/* 한 줄 메모 */}
-            {!isMyCard && data?.data.memo && (
+            {!isMyCard && data?.data.introduce && (
               <div
                 className={`${spacingStyles({ paddingX: 'md', paddingY: 'ms', marginTop: 'md' })} w-full rounded-md bg-opacity-white-20`}
               >
-                <span className="line-clamp-2 text-body-5">{data?.data.memo}</span>
+                <span className="line-clamp-2 text-body-5">{data?.data.introduce}</span>
               </div>
             )}
           </div>
         </div>
       </div>
-      <BottomSheet
-        mode={mode}
-        isModalOpen={isModalOpen}
-        closeModal={closeModal}
-        handleMode={handleMode}
-        handleCancelMode={handleCancelMode}
-      />
-      <Toast />
+      {!mode ? (
+        <BottomModal isModalOpen={isModalOpen} closeModal={closeModal} mode={mode}>
+          <BottomMenuItem onClick={handleMode}>한줄 메모</BottomMenuItem>
+          <BottomMenuItem className="text-error-medium">삭제하기</BottomMenuItem>
+        </BottomModal>
+      ) : (
+        <BottomModal isModalOpen={isModalOpen} closeModal={handleCancelMode} mode={mode}>
+          <BottomModalTitle>한줄 메모</BottomModalTitle>
+          <MemoInput onClose={closeModal} handleCancelMode={handleCancelMode} />
+        </BottomModal>
+      )}
+      <Toaster position="bottom-center" />
     </>
   );
 };

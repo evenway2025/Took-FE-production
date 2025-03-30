@@ -28,11 +28,6 @@ export type ProjectDto = {
   description: string;
 };
 
-export type FolderDto = {
-  id: number;
-  name: string;
-};
-
 // 명함 상세 정보 타입
 export type CardDetailResponse = {
   nickname: string;
@@ -41,8 +36,8 @@ export type CardDetailResponse = {
   organization: string;
   summary: string;
   region: string;
-  folders?: FolderDto[];
-  memo?: string;
+  group?: string[];
+  introduce?: string;
   interestDomain?: string[] | undefined;
   sns?: SnsDto[] | undefined;
   news?: string | undefined;
